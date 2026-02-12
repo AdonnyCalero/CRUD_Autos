@@ -25,7 +25,7 @@ function validarPlaca(placa) {
     if (!provinciasValidas.includes(letraInicial)) {
         return false;
     }
-    const formatoAntiguo = /^[A-Z]{3}\d{3}$/;
+    const formatoAntiguo = /^[A-Z]{3}-\d{3}$/;
     const formatoNuevo = /^[A-Z]{3}-\d{4}$/;
     const formatoMoto = /^[A-Z]{2}-\d{4}[A-Z]$/;
     return formatoAntiguo.test(placa) || formatoNuevo.test(placa) || formatoMoto.test(placa);

@@ -18,7 +18,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="placa" class="form-label">Placa</label>
-                            <input type="text" class="form-control" id="placa" maxlength="7" required>
+                            <input type="text" class="form-control" id="placa" maxlength="8" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="modelo" class="form-label">Modelo</label>
@@ -72,10 +72,31 @@
         document.getElementById('autoForm').addEventListener('submit', guardarAuto);
         document.getElementById('btnActualizar').addEventListener('click', actualizarAuto);
         document.getElementById('btnCancelar').addEventListener('click', limpiarFormulario);
-        document.getElementById('btnSalir').addEventListener('click', () => window.close());
+        document.getElementById('btnSalir').addEventListener('click', async () => {
+            const result = await Swal.fire({
+                title: '¿Salir?',
+                text: '¿Desea salir de la aplicación?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, salir',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (result.isConfirmed) {
+                window.close();
+            }
+        });
 
         document.getElementById('color').addEventListener('input', function(e) {
             this.value = this.value.replace(/[0-9]/g, '');
+        });
+
+        document.getElementById('placa').addEventListener('input', function(e) {
+            let value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (value.length >= 3 && !value.includes('-')) {
+                value = value.slice(0, 3) + '-' + value.slice(3);
+            }
+            this.value = value;
         });
 
         const provinciasValidas = ['A', 'B', 'C', 'E', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
@@ -85,7 +106,7 @@
             if (!provinciasValidas.includes(letraInicial)) {
                 return false;
             }
-            const formatoAntiguo = /^[A-Z]{3}\d{3}$/;
+            const formatoAntiguo = /^[A-Z]{3}-\d{3}$/;
             const formatoNuevo = /^[A-Z]{3}-\d{4}$/;
             const formatoMoto = /^[A-Z]{2}-\d{4}[A-Z]$/;
             return formatoAntiguo.test(placa) || formatoNuevo.test(placa) || formatoMoto.test(placa);
@@ -93,6 +114,23 @@
 
         function validarCorreo(correo) {
             return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+        }
+
+        async function validarCorreoExistente(correo) {
+            const dominiosComunes = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com', 'live.com', 'icloud.com', 'mail.com', 'protonmail.com', 'yahoo.es', 'hotmail.es', 'outlook.es'];
+            const dominio = correo.split('@')[1];
+            
+            if (dominiosComunes.includes(dominio)) {
+                return true;
+            }
+            
+            try {
+                const response = await fetch(`https://dns.google/resolve?name=${dominio}&type=A`);
+                const data = await response.json();
+                return data.Answer !== undefined;
+            } catch (error) {
+                return false;
+            }
         }
 
         async function guardarAuto(e) {
@@ -109,6 +147,20 @@
 
             if (!validarCorreo(correo)) {
                 Swal.fire('Error', 'Correo inválido', 'error');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Validando correo...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            const correoValido = await validarCorreoExistente(correo);
+            Swal.close();
+
+            if (!correoValido) {
+                Swal.fire('Error', 'El dominio del correo no existe', 'error');
                 return;
             }
 
@@ -169,7 +221,6 @@
                 document.getElementById('color').value = auto.color;
                 document.getElementById('correo').value = auto.correo;
 
-                document.getElementById('placa').readOnly = true;
                 document.getElementById('btnGuardar').style.display = 'none';
                 document.getElementById('btnActualizar').style.display = 'inline-block';
                 document.getElementById('btnCancelar').style.display = 'inline-block';
@@ -185,8 +236,27 @@
             const color = document.getElementById('color').value.toUpperCase();
             const correo = document.getElementById('correo').value.toLowerCase();
 
+            if (!validarPlaca(placa)) {
+                Swal.fire('Error', 'Placa inválida. La primera letra debe corresponder a una provincia válida de Ecuador. Formatos: ABC-123 (antiguo), AAA-1234 (nuevo), AA-1234A (moto)', 'error');
+                return;
+            }
+
             if (!validarCorreo(correo)) {
                 Swal.fire('Error', 'Correo inválido', 'error');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Validando correo...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            const correoValido = await validarCorreoExistente(correo);
+            Swal.close();
+
+            if (!correoValido) {
+                Swal.fire('Error', 'El dominio del correo no existe', 'error');
                 return;
             }
 
@@ -243,7 +313,6 @@
         function limpiarFormulario() {
             document.getElementById('autoForm').reset();
             document.getElementById('placaOriginal').value = '';
-            document.getElementById('placa').readOnly = false;
             document.getElementById('btnGuardar').style.display = 'inline-block';
             document.getElementById('btnActualizar').style.display = 'none';
             document.getElementById('btnCancelar').style.display = 'none';
