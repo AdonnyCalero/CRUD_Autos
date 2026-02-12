@@ -18,8 +18,17 @@ const pool = mysql.createPool({
     port: 3306
 });
 
+const provinciasValidas = ['A', 'B', 'C', 'E', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+
 function validarPlaca(placa) {
-    return /^[A-Z]{3}\d{3,4}$/.test(placa.toUpperCase());
+    const letraInicial = placa.charAt(0).toUpperCase();
+    if (!provinciasValidas.includes(letraInicial)) {
+        return false;
+    }
+    const formatoAntiguo = /^[A-Z]{3}\d{3}$/;
+    const formatoNuevo = /^[A-Z]{3}-\d{4}$/;
+    const formatoMoto = /^[A-Z]{2}-\d{4}[A-Z]$/;
+    return formatoAntiguo.test(placa) || formatoNuevo.test(placa) || formatoMoto.test(placa);
 }
 
 function validarCorreo(correo) {
@@ -55,7 +64,7 @@ app.post('/api/autos', async (req, res) => {
     }
 
     if (!validarPlaca(placa)) {
-        return res.status(400).json({ error: 'Placa inválida. Formato: ABC123 o ABC1234' });
+        return res.status(400).json({ error: 'Placa inválida. La primera letra debe corresponder a una provincia válida de Ecuador. Formatos: ABC-123 (antiguo), AAA-1234 (nuevo), AA-1234A (moto)' });
     }
 
     if (!validarCorreo(correo)) {
