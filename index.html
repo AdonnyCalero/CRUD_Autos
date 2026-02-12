@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRUD Autos</title>
     <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="node_modules/sweetalert2/dist/sweetalert2.min.css">
 </head>
 <body>
     <div class="container mt-5">
@@ -64,6 +65,7 @@
     </div>
 
     <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="node_modules/sweetalert2/dist/sweetalert2.min.js"></script>
     <script>
         const API_URL = 'http://localhost:3000/api/autos';
 
@@ -88,12 +90,12 @@
             const correo = document.getElementById('correo').value;
 
             if (!validarPlaca(placa)) {
-                alert('Placa inválida. Formato: ABC123 o ABC1234');
+                Swal.fire('Error', 'Placa inválida. Formato: ABC123 o ABC1234', 'error');
                 return;
             }
 
             if (!validarCorreo(correo)) {
-                alert('Correo inválido');
+                Swal.fire('Error', 'Correo inválido', 'error');
                 return;
             }
 
@@ -105,15 +107,15 @@
                 });
 
                 if (response.ok) {
-                    alert('Auto guardado correctamente');
+                    Swal.fire('Éxito', 'Auto guardado correctamente', 'success');
                     cargarAutos();
                     limpiarFormulario();
                 } else {
                     const error = await response.json();
-                    alert(error.error || 'Error al guardar');
+                    Swal.fire('Error', error.error || 'Error al guardar', 'error');
                 }
             } catch (error) {
-                alert('Error de conexión');
+                Swal.fire('Error', 'Error de conexión', 'error');
             }
         }
 
@@ -159,7 +161,7 @@
                 document.getElementById('btnActualizar').style.display = 'inline-block';
                 document.getElementById('btnCancelar').style.display = 'inline-block';
             } catch (error) {
-                alert('Error al obtener datos del auto');
+                Swal.fire('Error', 'Error al obtener datos del auto', 'error');
             }
         }
 
@@ -171,7 +173,7 @@
             const correo = document.getElementById('correo').value;
 
             if (!validarCorreo(correo)) {
-                alert('Correo inválido');
+                Swal.fire('Error', 'Correo inválido', 'error');
                 return;
             }
 
@@ -183,20 +185,31 @@
                 });
 
                 if (response.ok) {
-                    alert('Auto actualizado correctamente');
+                    Swal.fire('Éxito', 'Auto actualizado correctamente', 'success');
                     cargarAutos();
                     limpiarFormulario();
                 } else {
                     const error = await response.json();
-                    alert(error.error || 'Error al actualizar');
+                    Swal.fire('Error', error.error || 'Error al actualizar', 'error');
                 }
             } catch (error) {
-                alert('Error de conexión');
+                Swal.fire('Error', 'Error de conexión', 'error');
             }
         }
 
         async function eliminarAuto(placa) {
-            if (!confirm('¿Está seguro de eliminar este auto?')) return;
+            const result = await Swal.fire({
+                title: '¿Está seguro?',
+                text: '¿Desea eliminar este auto?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (!result.isConfirmed) return;
 
             try {
                 const response = await fetch(`${API_URL}/${placa}`, {
@@ -204,13 +217,13 @@
                 });
 
                 if (response.ok) {
-                    alert('Auto eliminado correctamente');
+                    Swal.fire('Eliminado', 'Auto eliminado correctamente', 'success');
                     cargarAutos();
                 } else {
-                    alert('Error al eliminar');
+                    Swal.fire('Error', 'Error al eliminar', 'error');
                 }
             } catch (error) {
-                alert('Error de conexión');
+                Swal.fire('Error', 'Error de conexión', 'error');
             }
         }
 

@@ -12,7 +12,8 @@
     "bootstrap": "^5.3.8",
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "mysql2": "^3.17.0"
+    "mysql2": "^3.17.0",
+    "sweetalert2": "^11.26.18"
   },
   "devDependencies": {
     "vite": "^5.0.0"
