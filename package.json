@@ -1,0 +1,20 @@
+{
+  "name": "autos-crud",
+  "version": "1.0.0",
+  "description": "CRUD de Autos con frontend y backend",
+  "main": "backend/server.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "node backend/server.js"
+  },
+  "dependencies": {
+    "bootstrap": "^5.3.8",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "mysql2": "^3.17.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}

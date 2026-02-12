@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Autos</title>
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Gestión de Autos</h2>
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <form id="autoForm">
+                    <input type="hidden" id="placaOriginal">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="placa" class="form-label">Placa</label>
+                            <input type="text" class="form-control" id="placa" maxlength="7" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="modelo" class="form-label">Modelo</label>
+                            <input type="text" class="form-control" id="modelo" maxlength="50" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="color" class="form-label">Color</label>
+                            <input type="text" class="form-control" id="color" maxlength="30" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="correo" class="form-label">Correo del Propietario</label>
+                            <input type="email" class="form-control" id="correo" maxlength="100" required>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary" id="btnGuardar">Guardar</button>
+                        <button type="button" class="btn btn-success" id="btnActualizar" style="display:none;">Actualizar</button>
+                        <button type="button" class="btn btn-secondary" id="btnCancelar" style="display:none;">Cancelar</button>
+                        <button type="button" class="btn btn-danger" id="btnSalir">Salir</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h4>Lista de Autos</h4>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Placa</th>
+                            <th>Modelo</th>
+                            <th>Color</th>
+                            <th>Correo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaAutos"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_URL = 'http://localhost:3000/api/autos';
+
+        document.getElementById('autoForm').addEventListener('submit', guardarAuto);
+        document.getElementById('btnActualizar').addEventListener('click', actualizarAuto);
+        document.getElementById('btnCancelar').addEventListener('click', limpiarFormulario);
+        document.getElementById('btnSalir').addEventListener('click', () => window.close());
+
+        function validarPlaca(placa) {
+            return /^[A-Z]{3}\d{3,4}$/.test(placa.toUpperCase());
+        }
+
+        function validarCorreo(correo) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+        }
+
+        async function guardarAuto(e) {
+            e.preventDefault();
+            const placa = document.getElementById('placa').value.toUpperCase();
+            const modelo = document.getElementById('modelo').value;
+            const color = document.getElementById('color').value;
+            const correo = document.getElementById('correo').value;
+
+            if (!validarPlaca(placa)) {
+                alert('Placa inválida. Formato: ABC123 o ABC1234');
+                return;
+            }
+
+            if (!validarCorreo(correo)) {
+                alert('Correo inválido');
+                return;
+            }
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ placa, modelo, color, correo })
+                });
+
+                if (response.ok) {
+                    alert('Auto guardado correctamente');
+                    cargarAutos();
+                    limpiarFormulario();
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Error al guardar');
+                }
+            } catch (error) {
+                alert('Error de conexión');
+            }
+        }
+
+        async function cargarAutos() {
+            try {
+                const response = await fetch(API_URL);
+                const autos = await response.json();
+                const tbody = document.getElementById('tablaAutos');
+                tbody.innerHTML = '';
+
+                autos.forEach(auto => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${auto.placa}</td>
+                        <td>${auto.modelo}</td>
+                        <td>${auto.color}</td>
+                        <td>${auto.correo}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editarAuto('${auto.placa}')">Editar</button>
+                            <button class="btn btn-danger btn-sm" onclick="eliminarAuto('${auto.placa}')">Eliminar</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function editarAuto(placa) {
+            try {
+                const response = await fetch(`${API_URL}/${placa}`);
+                const auto = await response.json();
+
+                document.getElementById('placa').value = auto.placa;
+                document.getElementById('placaOriginal').value = auto.placa;
+                document.getElementById('modelo').value = auto.modelo;
+                document.getElementById('color').value = auto.color;
+                document.getElementById('correo').value = auto.correo;
+
+                document.getElementById('placa').readOnly = true;
+                document.getElementById('btnGuardar').style.display = 'none';
+                document.getElementById('btnActualizar').style.display = 'inline-block';
+                document.getElementById('btnCancelar').style.display = 'inline-block';
+            } catch (error) {
+                alert('Error al obtener datos del auto');
+            }
+        }
+
+        async function actualizarAuto() {
+            const placaOriginal = document.getElementById('placaOriginal').value;
+            const placa = document.getElementById('placa').value.toUpperCase();
+            const modelo = document.getElementById('modelo').value;
+            const color = document.getElementById('color').value;
+            const correo = document.getElementById('correo').value;
+
+            if (!validarCorreo(correo)) {
+                alert('Correo inválido');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/${placaOriginal}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ placa, modelo, color, correo })
+                });
+
+                if (response.ok) {
+                    alert('Auto actualizado correctamente');
+                    cargarAutos();
+                    limpiarFormulario();
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Error al actualizar');
+                }
+            } catch (error) {
+                alert('Error de conexión');
+            }
+        }
+
+        async function eliminarAuto(placa) {
+            if (!confirm('¿Está seguro de eliminar este auto?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/${placa}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('Auto eliminado correctamente');
+                    cargarAutos();
+                } else {
+                    alert('Error al eliminar');
+                }
+            } catch (error) {
+                alert('Error de conexión');
+            }
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('autoForm').reset();
+            document.getElementById('placaOriginal').value = '';
+            document.getElementById('placa').readOnly = false;
+            document.getElementById('btnGuardar').style.display = 'inline-block';
+            document.getElementById('btnActualizar').style.display = 'none';
+            document.getElementById('btnCancelar').style.display = 'none';
+        }
+
+        cargarAutos();
+    </script>
+</body>
+</html>
