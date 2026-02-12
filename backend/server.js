@@ -32,7 +32,7 @@ function validarPlaca(placa) {
 }
 
 function validarCorreo(correo) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+    return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(correo);
 }
 
 app.get('/api/autos', async (req, res) => {
