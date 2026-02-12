@@ -85,9 +85,9 @@
         async function guardarAuto(e) {
             e.preventDefault();
             const placa = document.getElementById('placa').value.toUpperCase();
-            const modelo = document.getElementById('modelo').value;
-            const color = document.getElementById('color').value;
-            const correo = document.getElementById('correo').value;
+            const modelo = document.getElementById('modelo').value.toUpperCase();
+            const color = document.getElementById('color').value.toUpperCase();
+            const correo = document.getElementById('correo').value.toLowerCase();
 
             if (!validarPlaca(placa)) {
                 Swal.fire('Error', 'Placa inválida. Formato: ABC123 o ABC1234', 'error');
@@ -168,9 +168,9 @@
         async function actualizarAuto() {
             const placaOriginal = document.getElementById('placaOriginal').value;
             const placa = document.getElementById('placa').value.toUpperCase();
-            const modelo = document.getElementById('modelo').value;
-            const color = document.getElementById('color').value;
-            const correo = document.getElementById('correo').value;
+            const modelo = document.getElementById('modelo').value.toUpperCase();
+            const color = document.getElementById('color').value.toUpperCase();
+            const correo = document.getElementById('correo').value.toLowerCase();
 
             if (!validarCorreo(correo)) {
                 Swal.fire('Error', 'Correo inválido', 'error');
